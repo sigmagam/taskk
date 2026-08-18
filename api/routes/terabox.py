@@ -26,14 +26,12 @@ from config import (
 
 terabox_bp = Blueprint('terabox', __name__, url_prefix='/terabox')
 
-# Vercel's deployment filesystem is read-only. Use /tmp for its ephemeral cache.
-# Local runs continue to use database/ as before.
-if os.getenv("VERCEL"):
-    DB_DIR = "/tmp/terabox"
+if os.getenv('VERCEL'):
+    DB_DIR = '/tmp/terabox'
 else:
-    DB_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "database")
+    DB_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'database')
 os.makedirs(DB_DIR, exist_ok=True)
-SESSION_DB_FILE = os.path.join(DB_DIR, "terabox_session.json")
+SESSION_DB_FILE = os.path.join(DB_DIR, 'terabox_session.json')
 
 
 # ─── TeraBox Hardcoded Headers & Cookies ───────────────────────────────
@@ -553,8 +551,7 @@ def terabox_index():
         # Build Cloudflare Worker download link (bypassing VPS bandwidth)
         encoded_dlink = base64.b64encode(f['base_link'].encode('utf-8')).decode('utf-8').rstrip('=')
         encoded_cookie = base64.b64encode(config['headers']['Cookie'].encode('utf-8')).decode('utf-8').rstrip('=')
-        download_base = CORS_DOWNLOAD_BASE or f"{request.scheme}://{request.host}/dl"
-        f['download_link'] = f"{download_base}?url={encoded_dlink}&cookie={encoded_cookie}"
+        f['download_link'] = f"{CORS_DOWNLOAD_BASE}?url={encoded_dlink}&cookie={encoded_cookie}"
         
         del f['_short_url']
         del f['base_link']

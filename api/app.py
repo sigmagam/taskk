@@ -1,9 +1,3 @@
-"""
-Vercel-safe Flask entrypoint for the TeraBox API.
-
-The scraper blueprint is imported lazily so a dependency/import problem in the
-scraper cannot make the entire Serverless Function fail during cold start.
-"""
 import os
 import sys
 sys.path.insert(0, os.path.dirname(__file__))
@@ -14,13 +8,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
-app.wsgi_app = ProxyFix(
-    app.wsgi_app,
-    x_for=1,
-    x_proto=1,
-    x_host=1,
-    x_prefix=1,
-)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 _route_error = None
@@ -40,10 +28,7 @@ def index():
 
 @app.route("/health")
 def health():
-    payload = {
-        "status": "ok" if _route_error is None else "degraded",
-        "routes_loaded": _route_error is None,
-    }
+    payload = {"status": "ok" if _route_error is None else "degraded", "routes_loaded": _route_error is None}
     if _route_error:
         payload["route_import_error"] = _route_error
     return jsonify(payload), (200 if _route_error is None else 500)
@@ -63,10 +48,3 @@ def not_found(e):
 @app.errorhandler(500)
 def server_error(e):
     return jsonify({"error": "Internal Server Error", "message": str(e)}), 500
-
-if __name__ == "__main__":
-    app.run(
-        host=os.getenv("HOST", "0.0.0.0"),
-        port=int(os.getenv("PORT", "5001")),
-        debug=os.getenv("DEBUG", "false").lower() == "true",
-    )
